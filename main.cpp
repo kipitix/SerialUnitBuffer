@@ -9,21 +9,24 @@ using namespace std;
 
 int main()
 {
+	char buffer[1024];
+	char unit[1024];
+
 	{
-		SerialUnitBuffer sub(0);
+		SerialUnitBuffer sub(1, buffer, unit);
 		assert(sub.size() == 0);
-		assert(sub.buffer() == NULL);
+		assert(sub.buffer() == buffer);
 	}
 
 	{
-		SerialUnitBuffer sub(10);
-		assert(sub.size() == 10);
-		assert(sub.buffer() != NULL);
+		SerialUnitBuffer sub(10, buffer, unit);
+		assert(sub.size() == 9);
+		assert(sub.buffer() == buffer);
 		assert(*sub.buffer() == 0);
 	}
 
 	{
-		SerialUnitBuffer sub(2);
+		SerialUnitBuffer sub(3, buffer, unit);
 		sub.append('x');
 		assert(strcmp(sub.buffer(), "x") == 0);
 		sub.append('y');
@@ -33,7 +36,7 @@ int main()
 	}
 
 	{
-		SerialUnitBuffer sub(10);
+		SerialUnitBuffer sub(11, buffer, unit);
 		sub.append("xxxxx");
 		assert(strcmp(sub.buffer(), "xxxxx") == 0);
 		sub.append("yyyyyy");
@@ -45,7 +48,7 @@ int main()
 	}
 
 	{
-		SerialUnitBuffer sub(1024, ">>>", "<<<");
+		SerialUnitBuffer sub(1024, buffer, unit, ">>>", "<<<");
 
 		sub.append(">>>x<<<");
 		assert(strcmp(sub.goToNextUnit(), "x") == 0);
