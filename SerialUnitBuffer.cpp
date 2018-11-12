@@ -5,8 +5,8 @@ SerialUnitBuffer::SerialUnitBuffer(size_t size,
 								   const char * unitStart,
 								   const char * unitEnd)
 	: _size(size)
-	, _buffer(0)
-	, _unit(0)
+	, _buffer(NULL)
+	, _unit(NULL)
 	, _unitStart(unitStart)
 	, _unitEnd(unitEnd)
 {
@@ -20,15 +20,45 @@ SerialUnitBuffer::SerialUnitBuffer(size_t size,
 
 SerialUnitBuffer::~SerialUnitBuffer()
 {
-	if (_buffer != 0)
+	if (_buffer != NULL)
 	{
 		delete [] _buffer;
 	}
 
-	if (_unit != 0)
+	if (_unit != NULL)
 	{
 		delete [] _unit;
 	}
+}
+
+
+void SerialUnitBuffer::append(const char * str)
+{
+	if (_buffer == NULL)
+	{
+		return;
+	}
+
+	size_t curSize = strlen(_buffer);
+	size_t strSize = strlen(str);
+
+	if (strSize == 0)
+	{
+		return;
+	}
+
+	if (strSize > _size)
+	{
+		strSize = _size;
+	}
+
+	if (curSize + strSize >= _size)
+	{
+		size_t shift = curSize + strSize - _size;
+		memmove(_buffer, _buffer + shift, _size - shift + 1);
+	}
+
+	strncat(_buffer, str, strSize);
 }
 
 
@@ -42,40 +72,41 @@ void SerialUnitBuffer::append(char c)
 }
 
 
-void SerialUnitBuffer::append(const char * str)
+char * SerialUnitBuffer::goToNextUnit()
 {
-	if (_buffer == 0)
+	if (_buffer == NULL
+			|| _unitStart == NULL
+			|| _unitEnd == NULL)
 	{
-		return;
+		return NULL;
 	}
 
-	size_t currentSize = strlen(_buffer);
-	size_t strSize = strlen(str);
-	if (strSize > _size)
+	if (_unit != NULL)
 	{
-		strSize = _size;
+		delete [] _unit;
+		_unit = NULL;
 	}
 
-	if (currentSize >= _size)
+	char * start = strstr(_buffer, _unitStart);
+	char * end = strstr(_buffer, _unitEnd);
+	size_t startSize = strlen(_unitStart);
+	size_t endSize = strlen(_unitEnd);
+
+	if (start == NULL
+			|| end == NULL
+			|| end < start)
 	{
-		memmove(_buffer, _buffer + strSize, _size - strSize + 1);
+		return NULL;
 	}
 
-	if (_size < _maxSize)
-	{
-		_buffer[_size] = c;
-		_size ++;
-		_buffer[_size] = 0;
-	}
+	size_t unitSize = end - start - startSize;
 
-	size_t appSize = strlen(str);
-	if (_size + appSize <= _maxSize)
-	{
-		strcat(_buffer, str);
-		_size = strlen(_buffer);
-		return true;
-	}
+	_unit = new char[unitSize + 1];
+	_unit[unitSize] = 0;
 
-	return false;
+	strncpy(_unit, start + startSize, unitSize);
+
+	memmove(_buffer, end + endSize, strlen(end + endSize) + 1);
+
+	return _unit;
 }
-

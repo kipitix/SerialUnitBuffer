@@ -1,7 +1,7 @@
 #ifndef SERIALUNITBUFFER_H
 #define SERIALUNITBUFFER_H
 
-#include <string.h>
+#include <cstring>
 
 class SerialUnitBuffer
 {
@@ -15,12 +15,10 @@ public:
 	size_t size() const { return _size; }
 	char * buffer() const { return _buffer; }
 
-	void append(char c);
 	void append(const char * str);
+	void append(char c);
 
-	bool nextUnitExist() const;
 	char * goToNextUnit();
-
 	char * nextUnit() const { return _unit; }
 
 private:
